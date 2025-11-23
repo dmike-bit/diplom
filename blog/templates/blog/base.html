@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Matrix Blog{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --matrix-green: #00ff41;
+            --matrix-dark: #0a0a0a;
+            --matrix-darker: #000000;
+            --matrix-glow: 0 0 10px var(--matrix-green);
+        }
+        
+        body {
+            background: var(--matrix-darker);
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 65, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 65, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .matrix-nav {
+            background: rgba(10, 10, 10, 0.95) !important;
+            border-bottom: 2px solid var(--matrix-green);
+            box-shadow: var(--matrix-glow);
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand {
+            color: var(--matrix-green) !important;
+            font-weight: bold;
+            text-shadow: var(--matrix-glow);
+            font-size: 1.5rem;
+        }
+        
+        .nav-link {
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--matrix-green) !important;
+            text-shadow: var(--matrix-glow);
+        }
+        
+        .matrix-card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid var(--matrix-green);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 255, 65, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .matrix-card:hover {
+            box-shadow: var(--matrix-glow);
+            transform: translateY(-2px);
+        }
+        
+        .btn-matrix {
+            background: transparent;
+            color: var(--matrix-green);
+            border: 1px solid var(--matrix-green);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-matrix:hover {
+            background: var(--matrix-green);
+            color: var(--matrix-darker);
+            box-shadow: var(--matrix-glow);
+        }
+        
+        .btn-outline-matrix {
+            color: var(--matrix-green);
+            border: 1px solid var(--matrix-green);
+        }
+        
+        .btn-outline-matrix:hover {
+            background: var(--matrix-green);
+            color: var(--matrix-darker);
+        }
+        
+        .text-matrix {
+            color: var(--matrix-green) !important;
+        }
+        
+        .bg-matrix {
+            background-color: var(--matrix-green) !important;
+            color: var(--matrix-darker) !important;
+        }
+        
+        .form-control {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid var(--matrix-green);
+            color: #ffffff;
+        }
+        
+        .form-control:focus {
+            background: rgba(10, 10, 10, 0.9);
+            border-color: var(--matrix-green);
+            box-shadow: var(--matrix-glow);
+            color: #ffffff;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 0, 0, 0.8));
+            border: 1px solid var(--matrix-green);
+            border-radius: 15px;
+            padding: 3rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .alert-matrix {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+        }
+
+        /* Dropdown menu styling */
+        .dropdown-menu {
+            background: rgba(10, 10, 10, 0.95) !important;
+            border: 1px solid var(--matrix-green) !important;
+            box-shadow: 0 8px 32px rgba(0, 255, 65, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 1050 !important;
+            position: absolute !important;
+        }
+
+        .dropdown-item {
+            color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 255, 65, 0.2) !important;
+            color: var(--matrix-green) !important;
+            text-shadow: var(--matrix-glow);
+        }
+
+        .dropdown-divider {
+            border-color: var(--matrix-green) !important;
+        }
+
+        /* Navbar dropdown z-index */
+        .navbar .dropdown {
+            position: relative;
+        }
+
+        .navbar .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            left: auto !important;
+            right: 0 !important;
+            margin-top: 8px !important;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <canvas class="matrix-rain" id="matrixRain"></canvas>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark matrix-nav">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="bi bi-code-slash"></i> MATRIX BLOG
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'post_list' %}">
+                            <i class="bi bi-journal-text"></i> Posts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'user_list' %}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'search' %}">
+                            <i class="bi bi-search"></i> Search
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="bi bi-person-circle"></i> Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'post_new' %}">
+                                    <i class="bi bi-plus-circle"></i> New Post
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">
+                                <i class="bi bi-person-plus"></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show matrix-card" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <main class="container my-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="matrix-nav mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-matrix">
+                <i class="bi bi-code-slash"></i> Welcome to the Matrix. The choice is yours.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function createMatrixRain() {
+            const canvas = document.getElementById('matrixRain');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%&*";
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for (let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff41';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = matrix[Math.floor(Math.random() * matrix.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 35);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrixRain();
+            
+            document.querySelectorAll('.matrix-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+        
+        window.addEventListener('resize', function() {
+            const canvas = document.getElementById('matrixRain');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

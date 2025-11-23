@@ -1,0 +1,62 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Contact - Matrix Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="matrix-card p-4">
+            <h2 class="text-matrix text-center mb-4">
+                <i class="bi bi-envelope"></i> Contact Us
+            </h2>
+            <p class="text-center text-muted mb-4">Have questions? Reach out to the system administrators.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Name</label>
+                        {{ form.name }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Subject</label>
+                    {{ form.subject }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Message</label>
+                    {{ form.message }}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-matrix">
+                        <i class="bi bi-send"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="matrix-card p-4 mt-4">
+            <h4 class="text-matrix mb-3">System Information</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong class="text-matrix">Admin Email:</strong><br>
+                    {{ site_settings.admin_email }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong class="text-matrix">Response Time:</strong><br>
+                    Usually within 24 hours</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

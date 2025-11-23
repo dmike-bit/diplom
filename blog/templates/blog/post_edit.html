@@ -1,0 +1,77 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Edit Post - Matrix Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="matrix-card p-4">
+            <h2 class="text-matrix text-center mb-4">
+                <i class="bi bi-pencil"></i> {{ title }}
+            </h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Title</label>
+                    {{ form.title }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Content</label>
+                    {{ form.content }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Excerpt</label>
+                    {{ form.excerpt }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Category</label>
+                        {{ form.category }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Image</label>
+                        {{ form.image }}
+                        {% if post and post.image %}
+                        <div class="mt-2">
+                            <img src="{{ post.image.url }}" class="img-thumbnail" width="100" alt="Current image">
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Tags</label>
+                        {{ form.tags }}
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-matrix me-3">
+                        <i class="bi bi-check-circle"></i> {% if post %}Update Post{% else %}Create Post{% endif %}
+                    </button>
+                    {% if post %}
+                    <a href="{% url 'post_detail' pk=post.pk slug=post.slug %}" class="btn btn-outline-matrix me-2">
+                        <i class="bi bi-eye"></i> View Post
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'post_list' %}" class="btn btn-outline-matrix">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ profile_user.username }} - Matrix Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Info -->
+    <div class="col-md-4 mb-4">
+        <div class="matrix-card p-4 text-center">
+            {% if profile_user.profile.avatar %}
+            <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle mb-3" width="120" height="120" alt="Avatar">
+            {% else %}
+            <div class="rounded-circle bg-dark d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                <i class="bi bi-person text-matrix" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            
+            <h3 class="text-matrix">{{ profile_user.username }}</h3>
+            
+            {% if profile_user.profile.bio %}
+            <p class="mt-3">{{ profile_user.profile.bio }}</p>
+            {% endif %}
+            
+            <div class="mt-3">
+                {% if profile_user.profile.location %}
+                <p class="mb-1"><i class="bi bi-geo-alt text-matrix"></i> {{ profile_user.profile.location }}</p>
+                {% endif %}
+                {% if profile_user.profile.website %}
+                <p class="mb-1"><i class="bi bi-globe text-matrix"></i> 
+                    <a href="{{ profile_user.profile.website }}" class="text-matrix" target="_blank">Website</a>
+                </p>
+                {% endif %}
+                <p class="mb-1"><i class="bi bi-calendar text-matrix"></i> Joined {{ profile_user.date_joined|date:"M Y" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Content -->
+    <div class="col-md-8">
+        <!-- User's Posts -->
+        <div class="matrix-card p-4 mb-4">
+            <h4 class="text-matrix mb-4">
+                <i class="bi bi-journal-text"></i> Posts by {{ profile_user.username }}
+            </h4>
+            
+            {% for post in posts %}
+            <div class="border-bottom border-secondary pb-3 mb-3">
+                <h5><a href="{% url 'post_detail' pk=post.pk slug=post.slug %}" class="text-matrix text-decoration-none">{{ post.title }}</a></h5>
+                <p class="text-muted small mb-2">{{ post.created_date|date:"M d, Y" }} • {{ post.views }} views • {{ post.comment_count }} comments</p>
+                <p class="mb-2">{{ post.excerpt|default:post.content|truncatewords:20 }}</p>
+            </div>
+            {% empty %}
+            <p class="text-muted">{{ profile_user.username }} hasn't created any posts yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
