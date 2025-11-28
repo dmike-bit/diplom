@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Post, Comment, Category, UserProfile, Notification
+from blog.models import Post, Comment, Category, UserProfile, Notification
 
 class CategorySerializer(serializers.ModelSerializer):
     post_count = serializers.IntegerField(read_only=True)

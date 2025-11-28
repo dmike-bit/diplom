@@ -13,8 +13,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
-    ports:
-      - "5432:5432"
     networks:
       - myblog_network
     restart: unless-stopped
@@ -49,6 +47,7 @@ services:
       dockerfile: Dockerfile
     container_name: myblog_web
     environment:
+      - ALLOWED_HOSTS=82.202.141.206,localhost,127.0.0.1,web,db,redis,nginx
       - DEBUG=False
       - SECRET_KEY=your-super-secret-key-change-this-in-production
       - DB_NAME=myblog
@@ -90,8 +89,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: myblog_celery
-    command: celery -A myblog worker -l info
+    command: celery -A myblog.celery worker --loglevel=info
     environment:
+      - DJANGO_SETTINGS_MODULE=myblog.settings
       - DEBUG=False
       - SECRET_KEY=your-super-secret-key-change-this-in-production
       - DB_NAME=myblog
@@ -115,8 +115,15 @@ services:
       - myblog_network
     restart: unless-stopped
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep 'celery -A myblog.celery worker' | grep -v grep"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Celery Beat Scheduler
   celery-beat:
@@ -124,8 +131,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: myblog_celery_beat
-    command: celery -A myblog beat -l info
+    command: celery -A myblog.celery beat -l info
     environment:
+      - DJANGO_SETTINGS_MODULE=myblog.settings
       - DEBUG=False
       - SECRET_KEY=your-super-secret-key-change-this-in-production
       - DB_NAME=myblog
@@ -144,8 +152,15 @@ services:
       - myblog_network
     restart: unless-stopped
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "celery", "-A", "myblog.celery", "inspect", "ping", "--timeout=10"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Nginx Reverse Proxy
   nginx:
@@ -166,6 +181,11 @@ services:
     restart: unless-stopped
     depends_on:
       - web
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # Monitoring with Prometheus (optional)
   prometheus:

@@ -51,7 +51,14 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             from django.utils.text import slugify
-            self.slug = slugify(self.title)
+            base_slug = slugify(self.title)
+            if not base_slug:
+                base_slug = 'post'
+            self.slug = base_slug
+            counter = 1
+            while Post.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{base_slug}-{counter}"
+                counter += 1
         if self.status == 'published' and not self.published_date:
             self.published_date = timezone.now()
         if not self.excerpt and self.content:

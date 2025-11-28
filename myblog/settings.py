@@ -74,13 +74,23 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
+]
+
+# Debug Toolbar middleware (only in debug mode)
+if DEBUG:
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'myblog.urls'
@@ -105,33 +115,20 @@ WSGI_APPLICATION = 'myblog.wsgi.application'
 ASGI_APPLICATION = 'myblog.asgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# Configuration based on environment variables
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': get_env_var('DB_NAME', 'myblog'),
         'USER': get_env_var('DB_USER', 'postgres'),
-        'PASSWORD': get_env_var('DB_PASSWORD', ''),
+        'PASSWORD': get_env_var('DB_PASSWORD', 'postgres123'),
         'HOST': get_env_var('DB_HOST', 'localhost'),
         'PORT': get_env_var('DB_PORT', '5432'),
         'OPTIONS': {
-            'charset': 'utf8',
-        },
-        'TEST': {
-            'NAME': 'test_myblog',
+            'connect_timeout': 10,
         },
     }
 }
-
-# Fallback для SQLite при разработке
-if get_env_var('USE_SQLITE', False, cast=bool):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
 
 # Cache Configuration with Redis
 REDIS_URL = get_env_var('REDIS_URL', 'redis://localhost:6379/1')
@@ -228,8 +225,10 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+# SSL настройки с поддержкой переменных окружения
+SECURE_SSL_REDIRECT = get_env_var('SECURE_SSL_REDIRECT', False, cast=bool)
+
+if not DEBUG and SECURE_SSL_REDIRECT:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
@@ -260,45 +259,38 @@ AXES_COOLOFF_TIME = 1  # hour
 AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
 AXES_USE_USER_AGENT = True
 
-# Logging Configuration
+# Silence reCAPTCHA test key warning
+SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
+
+# Logging Configuration (only console for Docker)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
         'simple': {
             'format': '{levelname} {message}',
             'style': '{',
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
-        },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
         'myblog': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
@@ -322,8 +314,9 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# WhiteNoise for static files compression
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# WhiteNoise disabled temporarily
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

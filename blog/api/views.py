@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Q, Count
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Post, Comment, Category, UserProfile, Notification
+from blog .models import Post, Comment, Category, UserProfile, Notification
 from .serializers import (
     PostSerializer, PostListSerializer, CommentSerializer, 
     CategorySerializer, UserSerializer, NotificationSerializer,
@@ -144,6 +144,7 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'message': 'Profile updated successfully'})
 
 class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 

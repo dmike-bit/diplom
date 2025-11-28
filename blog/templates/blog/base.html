@@ -1,138 +1,49 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}The Matrix Blog{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,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">
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+        ym(23195392, "init", {
+            clickmap:true,
+            trackLinks:true,
+            accurateTrackBounce:true
+        });
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/23195392" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
+    <!-- Matrix CSS -->
+    <link href="{% static 'blog/css/matrix.css' %}" rel="stylesheet">
     
     <style>
-        :root {
-            --matrix-green: #00ff41;
-            --matrix-dark: #0a0a0a;
-            --matrix-darker: #000000;
-            --matrix-glow: 0 0 10px var(--matrix-green);
-        }
-        
-        body {
-            background: var(--matrix-darker);
-            color: #ffffff;
-            font-family: 'Courier New', monospace;
+        /* Base Styles */
+        * { box-sizing: border-box; }
+        body { 
+            background: #000000; 
+            color: #ffffff; 
+            font-family: 'Courier New', monospace; 
+            margin: 0; 
+            padding: 0;
             min-height: 100vh;
             position: relative;
-            overflow-x: hidden;
         }
         
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(0, 255, 65, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(0, 255, 65, 0.1) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        .matrix-nav {
-            background: rgba(10, 10, 10, 0.95) !important;
-            border-bottom: 2px solid var(--matrix-green);
-            box-shadow: var(--matrix-glow);
-            backdrop-filter: blur(10px);
-        }
-        
-        .navbar-brand {
-            color: var(--matrix-green) !important;
-            font-weight: bold;
-            text-shadow: var(--matrix-glow);
-            font-size: 1.5rem;
-        }
-        
-        .nav-link {
-            color: #ffffff !important;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            color: var(--matrix-green) !important;
-            text-shadow: var(--matrix-glow);
-        }
-        
-        .matrix-card {
-            background: rgba(26, 26, 26, 0.8);
-            border: 1px solid var(--matrix-green);
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 255, 65, 0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .matrix-card:hover {
-            box-shadow: var(--matrix-glow);
-            transform: translateY(-2px);
-        }
-        
-        .btn-matrix {
-            background: transparent;
-            color: var(--matrix-green);
-            border: 1px solid var(--matrix-green);
-            transition: all 0.3s ease;
-        }
-        
-        .btn-matrix:hover {
-            background: var(--matrix-green);
-            color: var(--matrix-darker);
-            box-shadow: var(--matrix-glow);
-        }
-        
-        .btn-outline-matrix {
-            color: var(--matrix-green);
-            border: 1px solid var(--matrix-green);
-        }
-        
-        .btn-outline-matrix:hover {
-            background: var(--matrix-green);
-            color: var(--matrix-darker);
-        }
-        
-        .text-matrix {
-            color: var(--matrix-green) !important;
-        }
-        
-        .bg-matrix {
-            background-color: var(--matrix-green) !important;
-            color: var(--matrix-darker) !important;
-        }
-        
-        .form-control {
-            background: rgba(10, 10, 10, 0.8);
-            border: 1px solid var(--matrix-green);
-            color: #ffffff;
-        }
-        
-        .form-control:focus {
-            background: rgba(10, 10, 10, 0.9);
-            border-color: var(--matrix-green);
-            box-shadow: var(--matrix-glow);
-            color: #ffffff;
-        }
-        
-        .hero-section {
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 0, 0, 0.8));
-            border: 1px solid var(--matrix-green);
-            border-radius: 15px;
-            padding: 3rem;
-            margin: 2rem 0;
-            text-align: center;
-        }
-        
-        .matrix-rain {
+        /* Matrix Background Animation */
+        #matrixRain {
             position: fixed;
             top: 0;
             left: 0;
@@ -143,119 +54,231 @@
             opacity: 0.1;
         }
         
-        .alert-matrix {
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid var(--matrix-green);
-            color: var(--matrix-green);
+        /* Container */
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 15px; 
         }
-
-        /* Dropdown menu styling */
-        .dropdown-menu {
-            background: rgba(10, 10, 10, 0.95) !important;
-            border: 1px solid var(--matrix-green) !important;
-            box-shadow: 0 8px 32px rgba(0, 255, 65, 0.3);
-            backdrop-filter: blur(10px);
-            z-index: 1050 !important;
-            position: absolute !important;
+        
+        /* Navigation */
+        .navbar { 
+            background: rgba(10, 10, 10, 0.95) !important; 
+            border-bottom: 2px solid #00ff41; 
+            padding: 10px 0;
         }
-
-        .dropdown-item {
-            color: #ffffff !important;
+        
+        .navbar-brand {
+            color: #00ff41 !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-nav { 
+            display: flex; 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        .nav-item { margin: 0 10px; }
+        
+        .nav-link { 
+            color: #ffffff !important; 
+            text-decoration: none; 
+            padding: 8px 15px; 
             transition: all 0.3s ease;
         }
-
-        .dropdown-item:hover {
-            background: rgba(0, 255, 65, 0.2) !important;
-            color: var(--matrix-green) !important;
-            text-shadow: var(--matrix-glow);
+        
+        .nav-link:hover { 
+            color: #00ff41 !important; 
+            text-shadow: 0 0 10px #00ff41;
         }
-
-        .dropdown-divider {
-            border-color: var(--matrix-green) !important;
+        
+        /* Buttons */
+        .btn { 
+            padding: 8px 16px; 
+            border: 1px solid #00ff41; 
+            background: transparent; 
+            color: #00ff41; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
         }
-
-        /* Navbar dropdown z-index */
-        .navbar .dropdown {
-            position: relative;
+        
+        .btn:hover { 
+            background: #00ff41; 
+            color: #000000; 
+            box-shadow: 0 0 10px #00ff41;
         }
-
-        .navbar .dropdown-menu {
-            position: absolute !important;
-            top: 100% !important;
-            left: auto !important;
-            right: 0 !important;
-            margin-top: 8px !important;
+        
+        .btn-primary { 
+            background: #00ff41; 
+            color: #000000; 
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc33; 
+        }
+        
+        .btn-secondary { 
+            background: transparent; 
+            color: #00ff41; 
+        }
+        
+        .btn-secondary:hover { 
+            background: rgba(0, 255, 65, 0.1); 
+        }
+        
+        /* Forms */
+        .form-control { 
+            width: 100%; 
+            padding: 8px 12px; 
+            border: 1px solid #00ff41; 
+            background: rgba(10, 10, 10, 0.8); 
+            color: #ffffff; 
+            margin-bottom: 15px;
+        }
+        
+        .form-control:focus { 
+            border-color: #00ff41; 
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3); 
+            outline: none; 
+        }
+        
+        /* Layout */
+        .row { 
+            display: flex; 
+            flex-wrap: wrap; 
+            margin: 0 -15px; 
+        }
+        
+        .col-md-8, .col-md-4 { 
+            flex: 0 0 100%; 
+            padding: 0 15px; 
+        }
+        
+        @media (min-width: 768px) { 
+            .col-md-8 { flex: 0 0 66.666667%; } 
+            .col-md-4 { flex: 0 0 33.333333%; } 
+        }
+        
+        /* Cards */
+        .card { 
+            background: rgba(26, 26, 26, 0.8); 
+            border: 1px solid #00ff41; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .card-body { padding: 20px; }
+        .card-title { color: #00ff41; margin-bottom: 10px; }
+        .text-muted { color: #888888; }
+        
+        /* Alerts */
+        .alert { 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-bottom: 20px; 
+        }
+        
+        .alert-success { 
+            background: rgba(0, 255, 65, 0.1); 
+            border: 1px solid #00ff41; 
+            color: #00ff41; 
+        }
+        
+        .alert-danger { 
+            background: rgba(255, 65, 65, 0.1); 
+            border: 1px solid #ff4141; 
+            color: #ff4141; 
+        }
+        
+        /* Utilities */
+        .mt-3 { margin-top: 1rem; } 
+        .mb-3 { margin-bottom: 1rem; }
+        .my-4 { margin: 1.5rem 0; }
+        .text-center { text-align: center; }
+        .text-matrix { color: #00ff41; }
+        
+        /* Footer */
+        .footer { 
+            margin-top: auto; 
+            padding: 20px 0; 
+            border-top: 2px solid #00ff41; 
+            text-align: center; 
+            background: rgba(10, 10, 10, 0.95);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-nav { 
+                display: block; 
+                margin-top: 15px; 
+            }
+            
+            .nav-item { 
+                margin: 5px 0; 
+            }
+            
+            .row { 
+                flex-direction: column; 
+            }
         }
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <canvas class="matrix-rain" id="matrixRain"></canvas>
+    <canvas id="matrixRain"></canvas>
     
-    <nav class="navbar navbar-expand-lg navbar-dark matrix-nav">
+    <nav class="navbar">
         <div class="container">
             <a class="navbar-brand" href="{% url 'index' %}">
-                <i class="bi bi-code-slash"></i> MATRIX BLOG
+                <img src="data:image/png;base64,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" alt="Matrix Logo" style="height: 40px; margin-right: 10px;">
+                MATRIX BLOG
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            <div class="navbar-nav">
+                <ul style="display: flex; list-style: none; margin: 0; padding: 0;">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}">
-                            <i class="bi bi-house"></i> Home
-                        </a>
+                        <a class="nav-link" href="{% url 'index' %}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'post_list' %}">
-                            <i class="bi bi-journal-text"></i> Posts
-                        </a>
+                        <a class="nav-link" href="{% url 'post_list' %}">Posts</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'user_list' %}">
-                            <i class="bi bi-people"></i> Users
-                        </a>
+                        <a class="nav-link" href="{% url 'user_list' %}">Users</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'search' %}">
-                            <i class="bi bi-search"></i> Search
-                        </a>
+                        <a class="nav-link" href="{% url 'search' %}">Search</a>
                     </li>
-                </ul>
-                
-                <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person"></i> {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark">
-                                <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                    <i class="bi bi-person-circle"></i> Profile
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'post_new' %}">
-                                    <i class="bi bi-plus-circle"></i> New Post
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">
-                                    <i class="bi bi-box-arrow-right"></i> Logout
-                                </a></li>
-                            </ul>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}">{{ user.username }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'post_new' %}">New Post</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="bi bi-box-arrow-in-right"></i> Login
-                            </a>
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">
-                                <i class="bi bi-person-plus"></i> Register
-                            </a>
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -266,9 +289,8 @@
     <div class="container mt-3">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show matrix-card" role="alert">
+                <div class="alert alert-{{ message.tags }}">
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
@@ -279,19 +301,18 @@
         {% endblock %}
     </main>
 
-    <footer class="matrix-nav mt-5 py-4">
+    <footer class="footer">
         <div class="container text-center">
-            <p class="mb-0 text-matrix">
-                <i class="bi bi-code-slash"></i> Welcome to the Matrix. The choice is yours.
-            </p>
+            <p class="mb-0 text-matrix">Welcome to the Matrix. The choice is yours.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
+        // Matrix Rain Effect
         function createMatrixRain() {
             const canvas = document.getElementById('matrixRain');
+            if (!canvas) return;
+            
             const ctx = canvas.getContext('2d');
             
             canvas.width = window.innerWidth;
@@ -302,21 +323,26 @@
             const columns = canvas.width / fontSize;
             const drops = [];
             
+            // Initialize drops
             for (let i = 0; i < columns; i++) {
                 drops[i] = 1;
             }
             
             function draw() {
+                // Semi-transparent black background for fade effect
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
+                // Matrix green text
                 ctx.fillStyle = '#00ff41';
                 ctx.font = fontSize + 'px monospace';
                 
+                // Draw characters
                 for (let i = 0; i < drops.length; i++) {
                     const text = matrix[Math.floor(Math.random() * matrix.length)];
                     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                     
+                    // Reset drop randomly or when it reaches bottom
                     if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                         drops[i] = 0;
                     }
@@ -324,27 +350,19 @@
                 }
             }
             
+            // Start animation
             setInterval(draw, 35);
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
         }
         
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             createMatrixRain();
-            
-            document.querySelectorAll('.matrix-card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-5px)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
-        
-        window.addEventListener('resize', function() {
-            const canvas = document.getElementById('matrixRain');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
         });
     </script>
     
