@@ -1,0 +1,127 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Welcome to The Matrix{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1 class="display-4 text-matrix fw-bold">WELCOME TO THE MATRIX</h1>
+    <p class="lead">Follow the white rabbit. Knock, knock, Neo.</p>
+    <div class="mt-4">
+        {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-matrix btn-lg me-3">
+                <i class="bi bi-person-plus"></i> Join the Resistance
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-outline-matrix btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Enter the Matrix
+            </a>
+        {% else %}
+            <a href="{% url 'post_new' %}" class="btn btn-matrix btn-lg me-3">
+                <i class="bi bi-plus-circle"></i> Create Post
+            </a>
+            <a href="{% url 'post_list' %}" class="btn btn-outline-matrix btn-lg">
+                <i class="bi bi-journal-text"></i> Browse Posts
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-matrix mb-4"><i class="bi bi-stars"></i> Featured Posts</h2>
+    </div>
+    
+    {% for post in featured_posts %}
+    <div class="col-md-4 mb-4">
+        <div class="card matrix-card h-100">
+            {% if post.image %}
+            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-file-text text-matrix" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-matrix">{{ post.title }}</h5>
+                <p class="card-text flex-grow-1">{{ post.excerpt|default:post.content|truncatewords:20 }}</p>
+                <div class="mt-auto">
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span><i class="bi bi-person"></i> {{ post.author.username }}</span>
+                        <span><i class="bi bi-calendar"></i> {{ post.created_date|date:"M d" }}</span>
+                    </div>
+                    <a href="{% url 'post_detail' pk=post.pk slug=post.slug %}" class="btn btn-matrix btn-sm mt-2 w-100">
+                        Read More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="matrix-card text-center p-5">
+            <i class="bi bi-inbox display-1 text-matrix"></i>
+            <h3 class="text-matrix mt-3">No Posts Yet</h3>
+            <p class="mb-4">Be the first to break the system and create a post!</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'post_new' %}" class="btn btn-matrix">Create First Post</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-8">
+        <h3 class="text-matrix mb-4"><i class="bi bi-clock"></i> Latest Posts</h3>
+        {% for post in latest_posts %}
+        <div class="matrix-card mb-3">
+            <div class="row g-0">
+                {% if post.image %}
+                <div class="col-md-3">
+                    <img src="{{ post.image.url }}" class="img-fluid rounded-start" alt="{{ post.title }}" style="height: 120px; width: 100%; object-fit: cover;">
+                </div>
+                {% endif %}
+                <div class="col-md-{% if post.image %}9{% else %}12{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title text-matrix">{{ post.title }}</h5>
+                        <p class="card-text">{{ post.excerpt|default:post.content|truncatewords:30 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-person"></i> {{ post.author.username }} • 
+                                <i class="bi bi-calendar"></i> {{ post.created_date|timesince }} ago
+                            </small>
+                            <a href="{% url 'post_detail' pk=post.pk slug=post.slug %}" class="btn btn-matrix btn-sm">Read</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="matrix-card p-3">
+            <h4 class="text-matrix mb-3"><i class="bi bi-tags"></i> Categories</h4>
+            {% for category in categories %}
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="border-left: 3px solid {{ category.color|default:'#00ff41' }};">
+                <span>{{ category.name }}</span>
+                <span class="badge bg-matrix">{{ category.post_count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="matrix-card p-3 mt-4">
+            <h4 class="text-matrix mb-3"><i class="bi bi-graph-up"></i> System Stats</h4>
+            <div class="row text-center">
+                <div class="col-6 mb-3">
+                    <div class="text-matrix fw-bold fs-3">{{ latest_posts.count }}</div>
+                    <small>Posts</small>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="text-matrix fw-bold fs-3">{{ categories.count }}</div>
+                    <small>Categories</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

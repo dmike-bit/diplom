@@ -1,0 +1,69 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Create New Post - Matrix Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="matrix-card p-4">
+            <h2 class="text-matrix text-center mb-4">
+                <i class="bi bi-plus-circle"></i> Create New Post
+            </h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Title</label>
+                    {{ form.title }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Content</label>
+                    {{ form.content }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-matrix">Excerpt (Optional)</label>
+                    {{ form.excerpt }}
+                    <div class="form-text text-muted">Brief description of your post. If empty, first 300 characters will be used.</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Category</label>
+                        {{ form.category }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Image</label>
+                        {{ form.image }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-matrix">Tags</label>
+                        {{ form.tags }}
+                        <div class="form-text text-muted">Separate tags with commas</div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-matrix me-3">
+                        <i class="bi bi-check-circle"></i> Create Post
+                    </button>
+                    <a href="{% url 'post_list' %}" class="btn btn-outline-matrix">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

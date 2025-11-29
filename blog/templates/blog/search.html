@@ -1,0 +1,109 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Search - Matrix Blog{% endblock %}
+
+{% block content %}
+<div class="matrix-card p-4 mb-4">
+    <h1 class="text-matrix mb-4"><i class="bi bi-search"></i> Search</h1>
+    
+    <form method="get" class="row g-3">
+        <div class="col-md-8">
+            <input type="text" name="query" class="form-control" placeholder="Search the matrix..." value="{{ query }}">
+        </div>
+        <div class="col-md-3">
+            <select name="search_in" class="form-select">
+                {% for value, label in form.search_in.field.choices %}
+                <option value="{{ value }}" {% if form.search_in.value == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-matrix w-100">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<div class="mb-4">
+    <h3 class="text-matrix">Search Results for "{{ query }}"</h3>
+    <p class="text-muted">{{ results|length }} results found</p>
+</div>
+
+<div class="row">
+    {% for result in results %}
+    <div class="col-12 mb-4">
+        <div class="matrix-card p-4">
+            {% if result.content %}
+            <!-- Post Result -->
+            <div class="d-flex align-items-start">
+                {% if result.image %}
+                <img src="{{ result.image.url }}" class="rounded me-4" width="100" height="100" alt="{{ result.title }}" style="object-fit: cover;">
+                {% else %}
+                <div class="bg-dark rounded d-flex align-items-center justify-content-center me-4" style="width: 100px; height: 100px;">
+                    <i class="bi bi-file-text text-matrix" style="font-size: 2rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="flex-grow-1">
+                    <h5 class="text-matrix">
+                        <a href="{% url 'post_detail' pk=result.pk slug=result.slug %}" class="text-matrix text-decoration-none">
+                            {{ result.title }}
+                        </a>
+                    </h5>
+                    <p class="text-muted small mb-2">
+                        By {{ result.author.username }} • {{ result.created_date|date:"M d, Y" }} • 
+                        {{ result.views }} views • {{ result.comment_count }} comments
+                    </p>
+                    <p class="mb-2">{{ result.excerpt|default:result.content|truncatewords:30 }}</p>
+                    {% if result.category %}
+                    <span class="badge bg-matrix">{{ result.category.name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% else %}
+            <!-- User Result -->
+            <div class="d-flex align-items-center">
+                {% if result.profile.avatar %}
+                <img src="{{ result.profile.avatar.url }}" class="rounded-circle me-4" width="80" height="80" alt="{{ result.username }}">
+                {% else %}
+                <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center me-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person text-matrix" style="font-size: 2rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="flex-grow-1">
+                    <h5 class="text-matrix">
+                        <a href="{% url 'user_profile' username=result.username %}" class="text-matrix text-decoration-none">
+                            {{ result.username }}
+                        </a>
+                    </h5>
+                    {% if result.first_name or result.last_name %}
+                    <p class="text-muted mb-1">{{ result.first_name }} {{ result.last_name }}</p>
+                    {% endif %}
+                    {% if result.profile.bio %}
+                    <p class="mb-2">{{ result.profile.bio|truncatewords:20 }}</p>
+                    {% endif %}
+                    <p class="text-muted small">Joined {{ result.date_joined|date:"M Y" }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="matrix-card text-center p-5">
+            <i class="bi bi-search display-1 text-matrix"></i>
+            <h3 class="text-matrix mt-3">No Results Found</h3>
+            <p class="mb-4">Try different search terms or browse all content.</p>
+            <a href="{% url 'post_list' %}" class="btn btn-matrix">Browse All Posts</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

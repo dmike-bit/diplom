@@ -1,0 +1,104 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Info -->
+    <div class="col-md-4 mb-4">
+        <div class="matrix-card p-4 text-center">
+            {% if user.profile.avatar %}
+            <img src="{{ user.profile.avatar.url }}" class="rounded-circle mb-3" width="120" height="120" alt="Avatar">
+            {% else %}
+            <div class="rounded-circle bg-dark d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                <i class="bi bi-person text-matrix" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            
+            <h3 class="text-matrix">{{ user.username }}</h3>
+            <p class="text-muted">{{ user.email }}</p>
+            
+            {% if user.profile.bio %}
+            <p class="mt-3">{{ user.profile.bio }}</p>
+            {% endif %}
+            
+            <div class="mt-3">
+                {% if user.profile.location %}
+                <p class="mb-1"><i class="bi bi-geo-alt text-matrix"></i> {{ user.profile.location }}</p>
+                {% endif %}
+                {% if user.profile.website %}
+                <p class="mb-1"><i class="bi bi-globe text-matrix"></i> 
+                    <a href="{{ user.profile.website }}" class="text-matrix" target="_blank">Website</a>
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'profile_edit' %}" class="btn btn-matrix me-2">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
+                <a href="{% url 'change_password' %}" class="btn btn-outline-matrix">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="matrix-card p-3 mt-3">
+            <h5 class="text-matrix mb-3">Stats</h5>
+            <div class="row text-center">
+                <div class="col-6">
+                    <div class="text-matrix fw-bold fs-4">{{ user_posts.count }}</div>
+                    <small>Posts</small>
+                </div>
+                <div class="col-6">
+                    <div class="text-matrix fw-bold fs-4">{{ user_comments.count }}</div>
+                    <small>Comments</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Content -->
+    <div class="col-md-8">
+        <!-- My Posts -->
+        <div class="matrix-card p-4 mb-4">
+            <h4 class="text-matrix mb-4"><i class="bi bi-journal-text"></i> My Posts</h4>
+            
+            {% for post in user_posts %}
+            <div class="border-bottom border-secondary pb-3 mb-3">
+                <h5><a href="{% url 'post_detail' pk=post.pk slug=post.slug %}" class="text-matrix text-decoration-none">{{ post.title }}</a></h5>
+                <p class="text-muted small mb-2">{{ post.created_date|date:"M d, Y" }} • {{ post.views }} views • {{ post.comment_count }} comments</p>
+                <p class="mb-2">{{ post.excerpt|default:post.content|truncatewords:20 }}</p>
+                <div>
+                    <a href="{% url 'post_edit' pk=post.pk %}" class="btn btn-outline-matrix btn-sm">Edit</a>
+                    <span class="badge {% if post.status == 'published' %}bg-matrix{% else %}bg-secondary{% endif %}">
+                        {{ post.status|title }}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">You haven't created any posts yet.</p>
+            <a href="{% url 'post_new' %}" class="btn btn-matrix">Create Your First Post</a>
+            {% endfor %}
+        </div>
+        
+        <!-- My Comments -->
+        <div class="matrix-card p-4">
+            <h4 class="text-matrix mb-4"><i class="bi bi-chat"></i> Recent Comments</h4>
+            
+            {% for comment in user_comments %}
+            <div class="border-bottom border-secondary pb-3 mb-3">
+                <p class="mb-2">{{ comment.text|truncatewords:20 }}</p>
+                <p class="text-muted small mb-2">
+                    On: <a href="{% url 'post_detail' pk=comment.post.pk slug=comment.post.slug %}" class="text-matrix">{{ comment.post.title }}</a>
+                    • {{ comment.created_date|timesince }} ago
+                </p>
+            </div>
+            {% empty %}
+            <p class="text-muted">You haven't posted any comments yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
