@@ -186,7 +186,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             # UserProfile создается автоматически через сигналы - НЕ создаем здесь!
-            login(request, user)
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             messages.success(request, 'Welcome to the Matrix! Your account has been created.')
             return redirect('index')
     else:

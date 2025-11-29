@@ -151,10 +151,10 @@ if get_env_var('USE_LOCAL_CACHE', False, cast=bool):
     }
 
 # Session Configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
