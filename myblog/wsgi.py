@@ -1,16 +1,16 @@
 """
-WSGI config for myblog project.
+Конфигурация WSGI для проекта myblog.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+Этот файл предоставляет WSGI приложение как модульную переменную с именем ``application``.
 
-For more information on this file, see
+Для получения дополнительной информации по этому файлу см.
 https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
-import os
+import os  # Импортируем модуль os для работы с переменными окружения и системными функциями
 
-from django.core.wsgi import get_wsgi_application
+from django.core.wsgi import get_wsgi_application  # Импортируем функцию для создания WSGI приложения Django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myblog.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myblog.settings')  # Устанавливаем модуль настроек Django как настройки по умолчанию для WSGI приложения
 
-application = get_wsgi_application()
+application = get_wsgi_application()  # Создаем и экспортируем WSGI приложение Django, которое будет использоваться веб-сервером (Apache, Nginx + Gunicorn и т.д.)

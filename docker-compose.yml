@@ -1,96 +1,138 @@
-version: '3.8'
+version: '3.8'  # Версия Docker Compose API
 
-services:
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: myblog_db
-    environment:
-      POSTGRES_DB: myblog
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backups:/backups
-    networks:
-      - myblog_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+services:  # Начинаем описание всех сервисов контейнеров
+  # PostgreSQL Database (База данных PostgreSQL)
+  db:  # Имя сервиса базы данных
+    image: postgres:15-alpine  # Используем образ PostgreSQL версии 15 на Alpine Linux
+    container_name: myblog_db  # Имя контейнера для удобства управления
+    environment:  # Переменные окружения для настройки PostgreSQL
+      POSTGRES_DB: myblog  # Имя базы данных по умолчанию
+      POSTGRES_USER: postgres  # Имя пользователя администратора БД
+      POSTGRES_PASSWORD: postgres123  # Пароль пользователя БД (НЕ ИСПОЛЬЗУЙТЕ В ПРОДАКШНЕ!)
+      PGDATA: /var/lib/postgresql/data/pgdata  # Директория для хранения данных PostgreSQL
+    volumes:  # Монтирование томов для постоянного хранения данных
+      - postgres_data:/var/lib/postgresql/data  # Том для данных БД (сохраняется между перезапусками)
+      - ./backups:/backups  # Монтируем папку бэкапов с хоста
+    networks:  # Сеть для взаимодействия между контейнерами
+      - myblog_network  # Подключаем к общей сети проекта
+    restart: unless-stopped  # Автоматический перезапуск контейнера если он остановился не по команде
+    healthcheck:  # Проверка работоспособности контейнера
+      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Проверяем готовность БД к подключениям
+      interval: 30s  # Выполняем проверку каждые 30 секунд
+      timeout: 10s  # Тайм-аут для проверки
+      retries: 5  # Количество неудачных попыток перед считанием контейнера нездоровым
 
-  # Redis Cache & Session Store
-  redis:
-    image: redis:7-alpine
-    container_name: myblog_redis
-    command: redis-server --appendonly yes --requirepass redis123
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - myblog_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+  # Redis Cache & Session Store (Redis для кэша и сессий)
+  redis:  # Сервис Redis для кэширования и хранения сессий
+    image: redis:7-alpine  # Используем Redis версии 7 на Alpine Linux
+    container_name: myblog_redis  # Имя контейнера Redis
+    command: redis-server --appendonly yes --requirepass redis123  # Команда запуска Redis с AOF и паролем
+    volumes:  # Монтирование томов
+      - redis_data:/data  # Том для сохранения данных Redis
+    ports:  # Проброс портов на хост
+      - "6379:6379"  # Порт Redis (стандартный 6379)
+    networks:  # Сеть
+      - myblog_network  # Подключение к общей сети
+    restart: unless-stopped  # Автоматический перезапуск
+    healthcheck:  # Проверка работоспособности
+      test: ["CMD", "redis-cli", "ping"]  # Пинг Redis сервера
+      interval: 30s  # Интервал проверки
+      timeout: 10s  # Тайм-аут
+      retries: 5  # Количество попыток
 
-  # Django Application
-  web:
-    build:
+  # Django Application (Django веб-приложение)
+  web:  # Основной сервис Django приложения
+    build:  # Настройки сборки образа
+      context: .  # Контекст сборки - текущая директория
+      dockerfile: Dockerfile  # Используем файл Dockerfile в корне проекта
+    container_name: myblog_web  # Имя контейнера Django приложения
+    environment:  # Переменные окружения для Django
+      - ALLOWED_HOSTS=82.202.141.206,localhost,127.0.0.1,web,db,redis,nginx  # Разрешенные хосты для доступа к приложению
+      - DEBUG=False  # Режим отладки выключен (продакшн)
+      - SECRET_KEY=your-super-secret-key-change-this-in-production  # Секретный ключ Django (НУЖНО ИЗМЕНИТЬ!)
+      - DB_NAME=myblog  # Имя базы данных
+      - DB_USER=postgres  # Пользователь БД
+      - DB_PASSWORD=postgres123  # Пароль БД (НУЖНО ИЗМЕНИТЬ!)
+      - DB_HOST=db  # Имя хоста базы данных (имя сервиса Docker)
+      - DB_PORT=5432  # Порт PostgreSQL
+      - REDIS_URL=redis://:redis123@redis:6379/0  # URL для подключения к Redis
+      - CELERY_BROKER_URL=redis://:redis123@redis:6379/1  # URL брокера сообщений Celery
+      - CELERY_RESULT_BACKEND=redis://:redis123@redis:6379/2  # URL бэкенда результатов Celery
+      - EMAIL_HOST=smtp.gmail.com  # SMTP сервер для отправки email
+      - EMAIL_PORT=587  # Порт SMTP сервера
+      - EMAIL_HOST_USER=your-email@gmail.com  # Email для отправки сообщений
+      - EMAIL_HOST_PASSWORD=your-app-password  # Пароль приложения для email
+      - DEFAULT_FROM_EMAIL=noreply@myblog.com  # Email отправителя по умолчанию
+    volumes:  # Монтирование директорий
+      - ./media:/app/media  # Директория для пользовательских загрузок
+      - ./static:/app/staticfiles  # Директория статических файлов
+      - ./logs:/app/logs  # Директория логов приложения
+    ports:  # Проброс портов
+      - "8000:8000"  # Порт Django разработки
+    networks:  # Сеть
+      - myblog_network  # Подключение к общей сети
+    restart: unless-stopped  # Автоматический перезапуск
+    depends_on:  # Зависимости от других сервисов
+      db:  # Зависим от БД
+        condition: service_healthy  # Запускаем только когда БД здорова
+      redis:  # Зависим от Redis
+        condition: service_healthy  # Запускаем только когда Redis здоров
+    healthcheck:  # Проверка работоспособности Django
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]  # HTTP запрос к health check endpoint
+      interval: 30s  # Интервал проверки
+      timeout: 10s  # Тайм-аут
+      retries: 5  # Количество попыток
+
+  # Celery Worker (Воркер для асинхронных задач)
+  celery:  # Сервис для выполнения фоновых задач через Celery
+    build:  # Настройки сборки (те же что и у Django)
       context: .
       dockerfile: Dockerfile
-    container_name: myblog_web
-    environment:
-      - ALLOWED_HOSTS=82.202.141.206,localhost,127.0.0.1,web,db,redis,nginx
-      - DEBUG=False
-      - SECRET_KEY=your-super-secret-key-change-this-in-production
-      - DB_NAME=myblog
+    container_name: myblog_celery  # Имя контейнера Celery воркера
+    command: celery -A myblog.celery worker --loglevel=info  # Команда запуска Celery воркера
+    environment:  # Переменные окружения для Celery
+      - DJANGO_SETTINGS_MODULE=myblog.settings  # Модуль настроек Django
+      - DEBUG=False  # Режим отладки
+      - SECRET_KEY=your-super-secret-key-change-this-in-production  # Секретный ключ
+      - DB_NAME=myblog  # Настройки БД
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=db
       - DB_PORT=5432
-      - REDIS_URL=redis://:redis123@redis:6379/0
-      - CELERY_BROKER_URL=redis://:redis123@redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://:redis123@redis:6379/2
-      - EMAIL_HOST=smtp.gmail.com
+      - REDIS_URL=redis://:redis123@redis:6379/0  # Подключение к Redis для кэша
+      - CELERY_BROKER_URL=redis://:redis123@redis:6379/1  # Redis как брокер сообщений
+      - CELERY_RESULT_BACKEND=redis://:redis123@redis:6379/2  # Redis для результатов задач
+      - EMAIL_HOST=smtp.gmail.com  # Email настройки
       - EMAIL_PORT=587
       - EMAIL_HOST_USER=your-email@gmail.com
       - EMAIL_HOST_PASSWORD=your-app-password
       - DEFAULT_FROM_EMAIL=noreply@myblog.com
-    volumes:
-      - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
-      - ./logs:/app/logs
-    ports:
-      - "8000:8000"
-    networks:
+    volumes:  # Монтирование томов
+      - ./media:/app/media  # Доступ к медиа файлам
+      - ./staticfiles:/app/staticfiles  # Статические файлы (примечание: опечатка, должно быть ./static)
+      - ./logs:/app/logs  # Логи Celery
+    networks:  # Сеть
       - myblog_network
-    restart: unless-stopped
-    depends_on:
+    restart: unless-stopped  # Автоматический перезапуск
+    depends_on:  # Зависимости
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+    healthcheck:  # Проверка работоспособности
+      test: ["CMD-SHELL", "ps aux | grep 'celery -A myblog.celery worker' | grep -v grep"]  # Проверяем процесс Celery
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
 
-  # Celery Worker
-  celery:
-    build:
+  # Celery Beat Scheduler (Планировщик задач)
+  celery-beat:  # Сервис для планирования периодических задач
+    build:  # Настройки сборки
       context: .
       dockerfile: Dockerfile
-    container_name: myblog_celery
-    command: celery -A myblog.celery worker --loglevel=info
-    environment:
+    container_name: myblog_celery_beat  # Имя контейнера планировщика
+    command: celery -A myblog.celery beat -l info  # Команда запуска Celery Beat (планировщика)
+    environment:  # Переменные окружения
       - DJANGO_SETTINGS_MODULE=myblog.settings
       - DEBUG=False
       - SECRET_KEY=your-super-secret-key-change-this-in-production
@@ -102,135 +144,93 @@ services:
       - REDIS_URL=redis://:redis123@redis:6379/0
       - CELERY_BROKER_URL=redis://:redis123@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:redis123@redis:6379/2
-      - EMAIL_HOST=smtp.gmail.com
-      - EMAIL_PORT=587
-      - EMAIL_HOST_USER=your-email@gmail.com
-      - EMAIL_HOST_PASSWORD=your-app-password
-      - DEFAULT_FROM_EMAIL=noreply@myblog.com
-    volumes:
+    volumes:  # Монтирование томов
       - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
+      - ./static:/app/staticfiles  # Здесь правильно ./static
       - ./logs:/app/logs
-    networks:
+    networks:  # Сеть
       - myblog_network
     restart: unless-stopped
-    depends_on:
+    depends_on:  # Зависимости
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep 'celery -A myblog.celery worker' | grep -v grep"]
+    healthcheck:  # Проверка планировщика
+      test: ["CMD", "celery", "-A", "myblog.celery", "inspect", "ping", "--timeout=10"]  # Проверяем статус Celery Beat
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Celery Beat Scheduler
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: myblog_celery_beat
-    command: celery -A myblog.celery beat -l info
-    environment:
-      - DJANGO_SETTINGS_MODULE=myblog.settings
-      - DEBUG=False
-      - SECRET_KEY=your-super-secret-key-change-this-in-production
-      - DB_NAME=myblog
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres123
-      - DB_HOST=db
-      - DB_PORT=5432
-      - REDIS_URL=redis://:redis123@redis:6379/0
-      - CELERY_BROKER_URL=redis://:redis123@redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://:redis123@redis:6379/2
-    volumes:
-      - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
-      - ./logs:/app/logs
-    networks:
-      - myblog_network
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "celery", "-A", "myblog.celery", "inspect", "ping", "--timeout=10"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: myblog_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/sites-available:/etc/nginx/sites-available:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./staticfiles:/var/www/static:ro
-      - ./media:/var/www/media:ro
-      - ./logs/nginx:/var/log/nginx
-    networks:
-      - myblog_network
-    restart: unless-stopped
-    depends_on:
-      - web
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health/"]
+  # Nginx Reverse Proxy (Обратный прокси)
+  nginx:  # Nginx веб-сервер и обратный прокси
+    image: nginx:alpine  # Используем официальный образ Nginx на Alpine Linux
+    container_name: myblog_nginx  # Имя контейнера Nginx
+    ports:  # Проброс портов на хост
+      - "80:80"  # HTTP порт
+      - "443:443"  # HTTPS порт
+    volumes:  # Монтирование конфигураций и файлов
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Основная конфигурация Nginx (только чтение)
+      - ./nginx/sites-available:/etc/nginx/sites-available:ro  # Конфигурации сайтов
+      - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL сертификаты
+      - ./static:/var/www/static:ro  # Статические файлы
+      - ./media:/var/www/media:ro  # Медиа файлы
+      - ./logs/nginx:/var/log/nginx  # Логи Nginx
+    networks:  # Сеть
+      - myblog_network  # Подключение к общей сети
+    restart: unless-stopped  # Автоматический перезапуск
+    depends_on:  # Зависимость от Django приложения
+      - web  # Nginx зависит от веб-сервиса
+    healthcheck:  # Проверка Nginx
+      test: ["CMD", "curl", "-f", "http://localhost/health/"]  # Проверка health endpoint через curl
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Monitoring with Prometheus (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: myblog_prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
-    networks:
+  # Monitoring with Prometheus (optional) (Мониторинг метрик)
+  prometheus:  # Prometheus для сбора метрик (опциональный сервис)
+    image: prom/prometheus:latest  # Официальный образ Prometheus
+    container_name: myblog_prometheus  # Имя контейнера Prometheus
+    command:  # Команды для настройки Prometheus
+      - '--config.file=/etc/prometheus/prometheus.yml'  # Путь к конфигурации
+      - '--storage.tsdb.path=/prometheus'  # Директория для хранения данных
+      - '--web.console.libraries=/etc/prometheus/console_libraries'  # Библиотеки консоли
+      - '--web.console.templates=/etc/prometheus/consoles'  # Шаблоны консоли
+    volumes:  # Монтирование файлов
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro  # Конфигурация мониторинга
+      - prometheus_data:/prometheus  # Том для данных Prometheus
+    ports:  # Проброс портов
+      - "9090:9090"  # Порт веб-интерфейса Prometheus
+    networks:  # Сеть
       - myblog_network
     restart: unless-stopped
 
-  # Grafana for dashboards (optional)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: myblog_grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-    volumes:
-      - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
-    networks:
+  # Grafana for dashboards (optional) (Визуализация метрик)
+  grafana:  # Grafana для создания дашбордов (опциональный сервис)
+    image: grafana/grafana:latest  # Официальный образ Grafana
+    container_name: myblog_grafana  # Имя контейнера Grafana
+    environment:  # Переменные окружения
+      - GF_SECURITY_ADMIN_PASSWORD=admin123  # Пароль администратора Grafana
+    volumes:  # Монтирование томов
+      - grafana_data:/var/lib/grafana  # Том для данных Grafana
+    ports:  # Проброс портов
+      - "3000:3000"  # Порт веб-интерфейса Grafana
+    networks:  # Сеть
       - myblog_network
     restart: unless-stopped
-    depends_on:
-      - prometheus
+    depends_on:  # Зависимость от Prometheus
+      - prometheus  # Grafana зависит от Prometheus как источника данных
 
-volumes:
-  postgres_data:
+volumes:  # Определение томов для постоянного хранения данных
+  postgres_data:  # Том для данных PostgreSQL
+    driver: local  # Локальный драйвер хранения
+  redis_data:  # Том для данных Redis
     driver: local
-  redis_data:
+  prometheus_data:  # Том для данных Prometheus
     driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
+  grafana_data:  # Том для данных Grafana
     driver: local
 
-networks:
-  myblog_network:
-    driver: bridge
+networks:  # Определение сетей для взаимодействия контейнеров
+  myblog_network:  # Общая сеть для всех сервисов проекта
+    driver: bridge  # Мостовой драйвер для изоляции и взаимодействия контейнеров

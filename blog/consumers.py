@@ -1,115 +1,117 @@
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from django.contrib.auth.models import User
-from .models import Notification
+import json  # Импортируем модуль для работы с JSON данными
+from channels.generic.websocket import AsyncWebsocketConsumer  # Импортируем базовый класс для асинхронных WebSocket потребителей
+from channels.db import database_sync_to_async  # Импортируем декоратор для синхронных операций с БД в асинхронных потребителях
+from django.contrib.auth.models import User  # Импортируем модель пользователя Django
+from .models import Notification  # Импортируем модель уведомлений
 
-class NotificationConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.room_group_name = f'notifications_{self.scope["user"].id}'
+# Потребитель WebSocket для real-time уведомлений
+class NotificationConsumer(AsyncWebsocketConsumer):  # Класс для обработки WebSocket подключений уведомлений
+    async def connect(self):  # Метод вызывается при подключении WebSocket
+        self.room_group_name = f'notifications_{self.scope["user"].id}'  # Создаем уникальное имя группы для каждого пользователя
         
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
+        # Присоединяемся к группе комнат
+        await self.channel_layer.group_add(  # Добавляем пользователя в группу для широковещательных сообщений
+            self.room_group_name,  # Имя группы
+            self.channel_name  # Имя канала текущего подключения
         )
         
-        await self.accept()
+        await self.accept()  # Принимаем WebSocket соединение
 
-    async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
+    async def disconnect(self, close_code):  # Метод вызывается при отключении WebSocket
+        # Выходим из группы комнат
+        await self.channel_layer.group_discard(  # Удаляем пользователя из группы
+            self.room_group_name,  # Имя группы
+            self.channel_name  # Имя канала
         )
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message_type = text_data_json['type']
+    async def receive(self, text_data):  # Метод для получения сообщений от WebSocket клиента
+        text_data_json = json.loads(text_data)  # Парсим JSON данные из входящего сообщения
+        message_type = text_data_json['type']  # Извлекаем тип сообщения
         
-        if message_type == 'get_notifications':
-            notifications = await self.get_user_notifications()
-            await self.send(text_data=json.dumps({
-                'type': 'notifications',
-                'notifications': notifications
+        if message_type == 'get_notifications':  # Если клиент запрашивает уведомления
+            notifications = await self.get_user_notifications()  # Получаем уведомления пользователя
+            await self.send(text_data=json.dumps({  # Отправляем ответ клиенту
+                'type': 'notifications',  # Тип ответа
+                'notifications': notifications  # Данные уведомлений
             }))
 
-    async def send_notification(self, event):
-        notification = event['notification']
+    async def send_notification(self, event):  # Метод для отправки уведомлений (вызывается группой)
+        notification = event['notification']  # Получаем данные уведомления из события
         
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'type': 'new_notification',
-            'notification': notification
+        # Отправляем сообщение в WebSocket
+        await self.send(text_data=json.dumps({  # Отправляем JSON сообщение клиенту
+            'type': 'new_notification',  # Тип сообщения - новое уведомление
+            'notification': notification  # Данные уведомления
         }))
 
-    @database_sync_to_async
-    def get_user_notifications(self):
-        user = self.scope["user"]
-        if user.is_anonymous:
-            return []
+    @database_sync_to_async  # Декоратор для безопасного доступа к БД из асинхронного кода
+    def get_user_notifications(self):  # Метод получения уведомлений пользователя из БД
+        user = self.scope["user"]  # Получаем пользователя из scope WebSocket соединения
+        if user.is_anonymous:  # Проверяем, аутентифицирован ли пользователь
+            return []  # Если анонимный, возвращаем пустой список
         
-        notifications = Notification.objects.filter(
-            user=user, 
-            is_read=False
-        ).order_by('-created_date')[:10]
+        notifications = Notification.objects.filter(  # Запрос к базе данных уведомлений
+            user=user,  # Фильтруем по текущему пользователю
+            is_read=False  # Только непрочитанные уведомления
+        ).order_by('-created_date')[:10]  # Сортируем по дате создания и берем последние 10
         
-        return [
+        return [  # Возвращаем список словарей с данными уведомлений
             {
-                'id': n.id,
-                'title': n.title,
-                'message': n.message,
-                'type': n.notification_type,
-                'created_date': n.created_date.isoformat(),
-                'is_read': n.is_read
+                'id': n.id,  # ID уведомления
+                'title': n.title,  # Заголовок уведомления
+                'message': n.message,  # Сообщение уведомления
+                'type': n.notification_type,  # Тип уведомления
+                'created_date': n.created_date.isoformat(),  # Дата создания в ISO формате
+                'is_read': n.is_read  # Статус прочитанности
             }
-            for n in notifications
+            for n in notifications  # Проходим по всем уведомлениям
         ]
 
-class ChatConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = f'chat_{self.room_name}'
+# Потребитель WebSocket для чата
+class ChatConsumer(AsyncWebsocketConsumer):  # Класс для обработки WebSocket подключений чата
+    async def connect(self):  # Метод вызывается при подключении к чат-комнате
+        self.room_name = self.scope['url_route']['kwargs']['room_name']  # Извлекаем имя комнаты из URL маршрута
+        self.room_group_name = f'chat_{self.room_name}'  # Создаем имя группы чата
 
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
+        # Присоединяемся к группе чата
+        await self.channel_layer.group_add(  # Добавляем пользователя в группу чат-комнаты
+            self.room_group_name,  # Имя группы чата
+            self.channel_name  # Имя канала
         )
 
-        await self.accept()
+        await self.accept()  # Принимаем WebSocket соединение
 
-    async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
+    async def disconnect(self, close_code):  # Метод вызывается при отключении от чата
+        # Выходим из группы чата
+        await self.channel_layer.group_discard(  # Удаляем пользователя из группы чата
+            self.room_group_name,  # Имя группы
+            self.channel_name  # Имя канала
         )
 
-    # Receive message from WebSocket
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        username = self.scope["user"].username if self.scope["user"].is_authenticated else "Anonymous"
+    # Получаем сообщение от WebSocket клиента
+    async def receive(self, text_data):  # Метод для обработки входящих сообщений чата
+        text_data_json = json.loads(text_data)  # Парсим JSON данные сообщения
+        message = text_data_json['message']  # Извлекаем текст сообщения
+        username = self.scope["user"].username if self.scope["user"].is_authenticated else "Anonymous"  # Получаем имя пользователя или "Anonymous"
 
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'username': username
+        # Отправляем сообщение в группу чата
+        await self.channel_layer.group_send(  # Отправляем сообщение всем участникам чата
+            self.room_group_name,  # Имя группы чата
+            {  # Данные сообщения
+                'type': 'chat_message',  # Тип события
+                'message': message,  # Текст сообщения
+                'username': username  # Имя отправителя
             }
         )
 
-    # Receive message from room group
-    async def chat_message(self, event):
-        message = event['message']
-        username = event['username']
+    # Получаем сообщение от группы чата
+    async def chat_message(self, event):  # Метод для обработки сообщений от группы
+        message = event['message']  # Получаем текст сообщения из события
+        username = event['username']  # Получаем имя отправителя
 
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'type': 'chat_message',
-            'message': message,
-            'username': username
+        # Отправляем сообщение в WebSocket
+        await self.send(text_data=json.dumps({  # Отправляем JSON сообщение клиенту
+            'type': 'chat_message',  # Тип сообщения
+            'message': message,  # Текст сообщения
+            'username': username  # Имя отправителя
         }))
